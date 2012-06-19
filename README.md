@@ -6,7 +6,7 @@ Phut
 What is Phut
 --------------
 
-Phunit is a *PH*P *U*nit *T*est framework which uses annotations to mimic the behavior of NUnit for .Net.
+Phunit is a **PH**P **U**nit **T**est framework which uses annotations to mimic the behavior of NUnit for .Net.
 
 Why another unit testing framework?
 -----------------------------------
