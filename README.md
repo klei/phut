@@ -29,14 +29,14 @@ You can install **Phut** using one of the following methods.
 One simple way to install Phut is to use [Composer](http://getcomposer.org/). First create or modify your ```composer.json``` file in the project root to include:
 
 ```json
-    {
-        "require": {
-            "klei\phut": "*"
-        },
-        "config": {
-            "bin-dir": "bin/"
-        }
+{
+    "require": {
+        "klei\phut": "*"
+    },
+    "config": {
+        "bin-dir": "bin/"
     }
+}
 ```
 
 Then download ```composer.phar``` from http://getcomposer.org/ and run:
@@ -62,33 +62,33 @@ As mentioned above Phut uses annotations to work. The name of the annotations is
 A simple test could therefore look like this:
 
 ```php
-    <?php
-    namespace vendor\tests;
+<?php
+namespace vendor\tests;
 
-    use Klei\Phut\TestFixture;
-    use Klei\Phut\Test;
-    use Klei\Phut\Assert;
+use Klei\Phut\TestFixture;
+use Klei\Phut\Test;
+use Klei\Phut\Assert;
 
-    /**
-     * @TestFixture
-     */
-    class MyFirstTests {
-    	/**
-    	 * @Test
-    	 */
-    	public function MultiplyOperator_Multiply2by4_ShouldGive8()
-    	{
-    		// Given
-    		$number1 = 2;
-    		$number2 = 4;
+/**
+ * @TestFixture
+ */
+class MyFirstTests {
+	/**
+	 * @Test
+	 */
+	public function MultiplyOperator_Multiply2by4_ShouldGive8()
+	{
+		// Given
+		$number1 = 2;
+		$number2 = 4;
 
-    		// When
-    		$result = $number1 * $number2;
+		// When
+		$result = $number1 * $number2;
 
-    		// Then
-    		Assert::areIdentical($result, 8);
-    	}
-    }
+		// Then
+		Assert::areIdentical($result, 8);
+	}
+}
 ```
 
 You can then run your test with the command:
