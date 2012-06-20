@@ -63,8 +63,6 @@ A simple test could therefore look like this:
 
 ```php
 <?php
-namespace vendor\tests;
-
 use Klei\Phut\TestFixture;
 use Klei\Phut\Test;
 use Klei\Phut\Assert;
