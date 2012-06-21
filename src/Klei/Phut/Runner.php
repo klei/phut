@@ -5,7 +5,11 @@ use Symfony\Component\Finder\Finder;
 use Doctrine\Common\Annotations\AnnotationReader;
 
 class Runner {
+	const DATE_FORMAT = 'Y-m-d H:i:s';
+	const ELAPSED_TIME_FORMAT = '%7.3f';
+
 	protected $arguments;
+	protected $cli;
 	protected $finder;
     protected $annotationReader;
     protected $binDir;
@@ -14,16 +18,25 @@ class Runner {
     protected $totalTimer;
 
 	public function __construct($arguments) {
-		if (!defined('PHUT_BIN_PATH')) {
-			throw new \Exception('Constant PHUT_BIN_PATH is not defined!');
-		}
-		if (!defined('PHUT_VERSION')) {
-			throw new \Exception('Constant PHUT_VERSION is not defined!');
-		}
+		$this->checkBinPathConstant();
+		$this->checkVersionConstant();
+		$this->cli = new Cli();
 		$this->binDir = dirname(PHUT_BIN_PATH);
 		$this->version = PHUT_VERSION;
 		$this->arguments = $arguments;
 		$this->totalTimer = new Timer();
+	}
+
+	public function checkBinPathConstant() {
+		if (!defined('PHUT_BIN_PATH')) {
+			throw new \Exception('Constant PHUT_BIN_PATH is not defined!');
+		}
+	}
+
+	public function checkVersionConstant() {
+		if (!defined('PHUT_VERSION')) {
+			throw new \Exception('Constant PHUT_VERSION is not defined!');
+		}
 	}
 
 	public function setFinder(Finder $finder) {
@@ -134,12 +147,20 @@ class Runner {
 			if (!class_exists($class, false)) {
 				include_once $fileName;
 			}
+
 			$reflectionClass = new \ReflectionClass($class);
-			if ($this->getAnnotationReader()->getClassAnnotation($reflectionClass, $this->annotationsNamespace . '\TestFixture') instanceof TestFixture) {
+			if ($this->isTestFixture($reflectionClass)) {
 				$testClasses[] = $reflectionClass->getName();
 			}
 		}
 		return $testClasses;
+	}
+
+	protected function isTestFixture(\ReflectionClass $class) {
+		if ($this->getAnnotationReader()->getClassAnnotation($class, $this->annotationsNamespace . '\TestFixture') instanceof TestFixture) {
+			return true;
+		}
+		return false;
 	}
 
 	protected function getTestMethods($testClasses) {
@@ -148,26 +169,41 @@ class Runner {
 			$reflectionClass = new \ReflectionClass($class);
 			foreach ($reflectionClass->getMethods() as $method) {
 				// TODO: get Setup and Teardown methods here as well
-				if ($this->getAnnotationReader()->getMethodAnnotation($method, $this->annotationsNamespace . '\Test') instanceof Test)
+				if ($this->isTestMethod($method)) {
 					$testMethods[$class][] = $method;
+				}
 			}
 		}
 		return $testMethods;
 	}
 
+	protected function isTestMethod(\ReflectionMethod $method) {
+		if ($this->getAnnotationReader()->getMethodAnnotation($method, $this->annotationsNamespace . '\Test') instanceof Test) {
+			return true;
+		}
+		return false;
+	}
+
 	protected function runAllTests($testClasses, $testMethods) {
-				// For each TestFixture
+		// For each TestFixture
 		foreach ($testClasses as $class) {
 			if (!isset($testMethods[$class]))
 				continue;
 
-			echo $class . ' (' . count($testMethods[$class]) . ' tests)' . PHP_EOL;
+			echo PHP_EOL;
+
+			$numberOfTests = count($testMethods[$class]);
+			$fixtureTimer = new Timer();
+
+			echo $this->cli->string(sprintf(' %s (%d tests)', $class, $numberOfTests), 'white') . PHP_EOL;
+
+			$fixtureTimer->start();
 
 			// Initiate TestFixture
 			try {
 				$testFixture = new $class();
 			} catch (\Exception $e) {
-				echo "\tError, TestFixture initialization failed with: {$e->getMessage()}" . PHP_EOL;
+				echo sprintf('   Error, TestFixture initialization failed with: %s', $e->getMessage()) . PHP_EOL;
 			}
 
 			$runTests = true;
@@ -176,44 +212,61 @@ class Runner {
 			try {
 				$this->runTestSetup($testFixture);
 			} catch (AssertionException $ae) {
-				echo "\t" . $ae->getMessage() . PHP_EOL;
+				echo sprintf('   %s', $ae->getMessage()) . PHP_EOL;
 				$runTests = false;
 			} catch (\Exception $e) {
-				echo "\tError, Test Setup failed with: {$e->getMessage()}" . PHP_EOL;
+				echo sprintf('   Error, Test Setup failed with: %s', $e->getMessage()) . PHP_EOL;
 				$runTests = false;
 			}
 
 			// Run all its tests
+			$numberOfFailed = 0;
 			if ($runTests) {
 				$testTimer = new Timer();
 
 				foreach ($testMethods[$class] as $method) {
-					echo "\t- {$method->getName()}";
+					echo sprintf("   - %-100s", $method->getName());
 
 					$testTimer->start();
 
 					// Run test and catch results
+					$failed = false;
+					$failMessage = null;
 					try {
 						$this->runTest($testFixture, $method);
-						echo "\t\t" . $testTimer->stop(3) . ' s [ OK ]' . PHP_EOL;
 					} catch (AssertionException $ae) {
-						echo "\t\t" . $testTimer->stop(3) . ' s [FAIL]' . PHP_EOL;
-						echo "\t\t" . $ae->getMessage() . PHP_EOL;
+						$failed = true;
+						$failMessage = $ae->getMessage();
 					} catch (\Exception $e) {
-						echo "\t\t" . $testTimer->stop(3) . ' s [FAIL]' . PHP_EOL;;
-						echo "\t\tError, Test failed with: {$e->getMessage()}" . PHP_EOL;
+						$failed = true;
+						$failMessage = sprintf('Error, Test failed with: %s', $e->getMessage());
+					}
+
+					echo sprintf(' %s %s', $this->getElapsedTimeString($testTimer), $this->getSuccessLabel($failed)) . PHP_EOL;
+
+					if ($failed) {
+						$numberOfFailed++;
+						echo sprintf('       %s', $this->cli->string($failMessage, 'purple')) . PHP_EOL;
 					}
 				}
+			} else {
+				$numberOfFailed = $numberOfTests;
 			}
 
 			// Run TearDown-method if it exists (a method marked with Teardown annotation)
 			try {
 				$this->runTestTeardown($testFixture);
 			} catch (AssertionException $ae) {
-				echo "\t" . $ae->getMessage() . PHP_EOL;
+				echo sprintf('   %s', $ae->getMessage()) . PHP_EOL;
 			} catch (\Exception $e) {
-				echo "\tError, Test Teardown failed with: {$e->getMessage()}" . PHP_EOL;
+				echo sprintf('   Error, Test Teardown failed with: %s', $e->getMessage()) . PHP_EOL;
 			}
+
+			echo PHP_EOL;
+
+			$resultMessage = sprintf(' %s failed, %s successful tests', $this->cli->string($numberOfFailed, 'red'), $this->cli->string($numberOfTests - $numberOfFailed, 'green'));
+			$padding = str_pad(' ', 125 - strlen($resultMessage));
+			echo sprintf(' %s %s %s %s', $resultMessage, $padding, $this->getElapsedTimeString($fixtureTimer), $this->getSuccessLabel($numberOfFailed > 0)) . PHP_EOL;
 		}
 	}
 
@@ -229,21 +282,40 @@ class Runner {
 		
 	}
 
-	public function printHeader() {
+	protected function getElapsedTimeString(Timer $timer, $trim = false) {
+		$elapsedTimeString = sprintf(self::ELAPSED_TIME_FORMAT . ' s', $timer->stop(3));
+		if ($trim) {
+			$elapsedTimeString = trim($elapsedTimeString);
+		}
+		return $this->cli->string($elapsedTimeString, 'dark-gray');
+	}
+
+	protected function getSuccessLabel($failed) {
+		$failed = (bool)$failed;
+		$color = $failed ? 'red' : 'green';
+		$message = $failed ? 'FAIL' : ' OK ';
+		return $this->cli->string('[' . $message . ']', $color);
+	}
+
+	protected function getNowFormatted() {
 		$now = new \DateTime();
+		return $now->format(self::DATE_FORMAT);
+	}
+
+	public function printHeader() {
 		$this->totalTimer->start();
+
 		echo PHP_EOL;
-		echo 'Phut, version: ' . $this->version . PHP_EOL;
-		echo '-------------------------------' . PHP_EOL;
+		echo $this->cli->string(' Phut, version: ' . $this->version, 'white') . PHP_EOL;
+		echo ' -------------------------------' . PHP_EOL;
 		echo PHP_EOL;
-		echo 'Runner started at: ' . $now->format('Y-m-d H:i:s') . PHP_EOL;
+		echo sprintf(' Runner started at: %s', $this->getNowFormatted()) . PHP_EOL;
 		echo PHP_EOL;
 	}
 
 	protected function printFooter() {
-		$now = new \DateTime();
 		echo PHP_EOL;
-		echo "Runner finished at: " . $now->format('Y-m-d H:i:s') . " (" . $this->totalTimer->stop(3) . " s)" . PHP_EOL;
+		echo sprintf(' Runner finished at: %s (%s)', $this->getNowFormatted(), $this->getElapsedTimeString($this->totalTimer, true)) . PHP_EOL;
 	}
 }
 ?>
