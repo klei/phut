@@ -21,7 +21,7 @@ class Runner {
 		$this->checkBinPathConstant();
 		$this->checkVersionConstant();
 		$this->cli = new Cli();
-		if (php_sapi_name() !== 'cli' || strtolower(substr(PHP_OS, 0, 3)) === 'win' && getenv('ANSICON') === null) {
+		if (php_sapi_name() !== 'cli' || strtolower(substr(PHP_OS, 0, 3)) === 'win' && getenv('ANSICON') == null) {
 			$this->cli->disableColoring();
 		}
 		$this->binDir = dirname(PHUT_BIN_PATH);
