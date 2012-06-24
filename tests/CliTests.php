@@ -111,5 +111,23 @@ class CliTests {
 		// Then
 		Assert::throws("InvalidArgumentException", $action);
 	}
+
+	/**
+	 * @Test
+	 */
+	public function string_ColoringDisabledBothForegroundAndBackgroundColorGiven_OutputEqualsInput() {
+		// Given
+		$input = "Test text";
+		$cli = new Cli();
+		$cli->disableColoring();
+		$foregroundColor = 'white';
+		$backgroundColor = 'black';
+
+		// When
+		$output = $cli->string($input, $foregroundColor, $backgroundColor);
+
+		// Then
+		Assert::areIdentical($output, $input);
+	}
 }
 ?>

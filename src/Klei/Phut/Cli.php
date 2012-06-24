@@ -36,17 +36,19 @@ class Cli {
 
 	protected $reset = '0';
 
-	public function __construct() {
-		if (php_sapi_name() !== 'cli' || strtolower(substr(PHP_OS, 0, 3)) === 'win' && is_null(getenv('ANSICON'))) {
-			$this->doColorize = false;
-		}
+	public function disableColoring() {
+		$this->doColorize = false;
+	}
+
+	public function enableColoring() {
+		$this->doColorize = true;
 	}
 
 	public function string($string, $foregroundColor = null, $backgroundColor = null) {
 		if (!$this->doColorize) {
 			return $string;
 		}
-		
+
 		$result = "";
 
 		if ($foregroundColor !== null) {
