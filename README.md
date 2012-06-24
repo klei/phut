@@ -95,6 +95,8 @@ You can then run your test with the command:
 
 If no folder (```<test-folder-name>```) or file (```<test-file-name>```) is specified, the runner defaults to the folder ```tests/```.
 
+_**N.B.** To get colorized output on windows see [Ansicon](https://github.com/adoxa/ansicon)._
+
 The future for Phut
 -------------------
 
