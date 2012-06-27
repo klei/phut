@@ -85,10 +85,12 @@ class Runner {
 		$this->printHeader();
 
 		// Run tests
-		$this->runAllTests($testClasses, $testMethods);
+		$result = $this->runAllTests($testClasses, $testMethods);
 
 		// Print footer
 		$this->printFooter();
+
+		exit((int)!$result);
 	}
 
 	public function getFiles() {
@@ -187,7 +189,11 @@ class Runner {
 		return false;
 	}
 
+	/**
+	 * @return bool
+	 */
 	protected function runAllTests($testClasses, $testMethods) {
+		$totalFailedTests = 0;
 		// For each TestFixture
 		foreach ($testClasses as $class) {
 			if (!isset($testMethods[$class]))
@@ -271,7 +277,10 @@ class Runner {
 			$resultMessage = sprintf(' %s failed, %s successful tests', $this->cli->string($numberOfFailed, 'red'), $this->cli->string($numberOfTests - $numberOfFailed, 'green'));
 			$padding = str_pad(' ', 125 - strlen($resultMessage));
 			echo sprintf(' %s %s %s %s', $resultMessage, $padding, $this->getElapsedTimeString($fixtureTimer), $this->getSuccessLabel($numberOfFailed > 0)) . PHP_EOL;
+
+			$totalFailedTests += $numberOfFailed;
 		}
+		return !($totalFailedTests > 0);
 	}
 
 	protected function runTestSetup($testFixture) {
