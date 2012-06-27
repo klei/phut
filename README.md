@@ -3,6 +3,11 @@ Phut
 
 **Phut** is a small unit test framework for PHP 5.3+, inspired by [NUnit](http://nunit.org)
 
+Build status
+------------
+- [master](https://github.com/klei-dev/phut) [![Master Build Status](https://secure.travis-ci.org/klei-dev/phut.png?branch=master)](http://travis-ci.org/klei-dev/phut)
+- [develop](https://github.com/klei-dev/phut/tree/develop) [![Develop Build Status](https://secure.travis-ci.org/klei-dev/phut.png?branch=develop)](http://travis-ci.org/klei-dev/phut)
+
 What is Phut
 --------------
 
@@ -63,8 +68,6 @@ A simple test could therefore look like this:
 
 ```php
 <?php
-namespace vendor\tests;
-
 use Klei\Phut\TestFixture;
 use Klei\Phut\Test;
 use Klei\Phut\Assert;
