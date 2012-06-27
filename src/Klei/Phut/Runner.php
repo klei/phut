@@ -202,14 +202,15 @@ class Runner {
 
 			$fixtureTimer->start();
 
+			$runTests = true;
+
 			// Initiate TestFixture
 			try {
 				$testFixture = new $class();
 			} catch (\Exception $e) {
 				echo sprintf('   Error, TestFixture initialization failed with: %s', $e->getMessage()) . PHP_EOL;
+				$runTests = false;
 			}
-
-			$runTests = true;
 
 			// Run SetUp-method if it exists (a method marked with Setup annotation)
 			try {
