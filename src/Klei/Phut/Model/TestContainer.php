@@ -39,7 +39,7 @@ class TestContainer {
 	}
 
 	public function init() {
-
+		$this->instantiateTarget();
 	}
 
 	public function instantiateTarget() {
