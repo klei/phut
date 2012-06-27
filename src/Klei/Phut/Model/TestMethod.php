@@ -26,8 +26,11 @@ class TestMethod implements IRunnable {
 	 * @param TestCase $testCase
 	 */
 	public function __construct($targetClass, \ReflectionMethod $method, TestCase $testCase = null) {
+		if (!is_object($targetClass)) {
+			throw new \InvalidArgumentException(sprintf('Expected parameter $targetClass to be of type object, but was: %s', gettype($targetClass)));
+		}
 		if (!method_exists($targetClass, $method->getName())) {
-			throw new \InvalidArgumentException(sprintf('Expected parameter $targetClass to have the method "%s", but it was not found on object of type: %s', $method->getName(), gettype($targetClass)));
+			throw new \InvalidArgumentException(sprintf('Object $targetClass does not have method "%s"', $method->getName()));
 		}
 		if ($method->getNumberOfRequiredParameters() > 0) {
 			if ($testCase === null) {
@@ -55,7 +58,7 @@ class TestMethod implements IRunnable {
 	 * @return bool
 	 */
 	public function isParameterizedTest() {
-		return $this->testCase->hasParams();
+		return $this->testCase !== null && $this->testCase->hasParams();
 	}
 
 	/**

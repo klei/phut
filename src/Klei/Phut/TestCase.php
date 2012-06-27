@@ -14,20 +14,20 @@ final class TestCase {
 	protected $params;
 
 	public function __construct($values) {
-
+		$this->params = (array) $values;
 	}
 
 	/**
 	 * @return bool
 	 */
 	public function hasParams() {
-		return true; // @TODO
+		return !empty($this->params);
 	}
 
 	/**
 	 * @return array
 	 */
 	public function getParams() {
-		return array("TODO"); // @TODO
+		return $this->params;
 	}
 }
