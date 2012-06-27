@@ -2,42 +2,65 @@
 namespace Klei\Phut;
 
 class Assert {
+	/**
+	 * @param bool $value
+	 */
 	public static function isTrue($value) {
 		if ((bool)$value !== true) {
 			throw new AssertionException('Assertion failed. Expected: true, But was: false');
 		}
 	}
 
+	/**
+	 * @param bool $value
+	 */
 	public static function isFalse($value) {
 		if ((bool)$value !== false) {
 			throw new AssertionException('Assertion failed. Expected: false, But was: true');
 		}
 	}
 
+	/**
+	 * @param mixed $value
+	 */
 	public static function isNull($value) {
 		if ($value !== null) {
 			throw new AssertionException(sprintf('Assertion failed. Expected: NULL, But was: %s', gettype($value)));
 		}
 	}
 
+	/**
+	 * @param mixed $value
+	 */
 	public static function isNotNull($value) {
 		if ($value === null) {
 			throw new AssertionException('Assertion failed. Expected: NOT NULL, But was: NULL');
 		}
 	}
 
+	/**
+	 * @param mixed $actual
+	 * @param mixed $expected
+	 */
 	public static function areEqual($actual, $expected) {
 		if ($actual != $expected) {
 			throw new AssertionException(sprintf('Assertion failed. Expected: %s, But was: %s', $expected, $actual));
 		}
 	}
 
+	/**
+	 * @param mixed $actual
+	 * @param mixed $expected
+	 */
 	public static function areIdentical($actual, $expected) {
 		if ($actual !== $expected) {
 			throw new AssertionException(sprintf('Assertion failed. Expected: %s, But was: %s', $expected, $actual));
 		}
 	}
 
+	/**
+	 * @param string|array|\Traversable $value
+	 */
 	public static function isEmpty($value) {
 		if (is_string($value) && strlen($value) !== 0) {
 			throw new AssertionException(sprintf('Assertion failed. Expected an empty string, But was: %s', $value));
@@ -55,6 +78,9 @@ class Assert {
 		self::failIfNeitherStringNorArrayNorIterator($value);
 	}
 
+	/**
+	 * @param string|array|\Traversable $value
+	 */
 	public static function isNotEmpty($value) {
 		if (is_string($value) && strlen($value) === 0) {
 			throw new AssertionException('Assertion failed. Expected anything but an empty string, But was: empty string');
@@ -72,12 +98,19 @@ class Assert {
 		self::failIfNeitherStringNorArrayNorIterator($value);
 	}
 
+	/**
+	 * @param string|array|\Traversable $value
+	 */
 	protected static function failIfNeitherStringNorArrayNorIterator($value) {
 		if (!is_string($value) && !is_array($value) && !($value instanceof \Traversable)) {
 			throw new \InvalidArgumentException(sprintf('Parameter $value is expected to be either a string, an array or an iterator, But was: %s', gettype($value)));
 		}
 	}
 
+	/**
+	 * @param string $expectedException
+	 * @param callable $callable
+	 */
 	public static function throws($expectedException, $callable) {
 		if (!is_callable($callable)) {
 			throw new \InvalidArgumentException(sprintf('Parameter $callable is expected to be callable, But was: %s', gettype($callable)));
@@ -93,6 +126,20 @@ class Assert {
 			}
 		}
 		throw new AssertionException(sprintf('Assertion failed. Expected exception: %s, But no exception was thrown', $expectedException));
+	}
+
+	/**
+	 * @param callable $callable
+	 */
+	public static function doesNotThrow($callable) {
+		if (!is_callable($callable)) {
+			throw new \InvalidArgumentException(sprintf('Parameter $callable is expected to be callable, But was: %s', gettype($callable)));
+		}
+		try {
+			$callable();
+		} catch (\Exception $e) {
+			throw new AssertionException(sprintf('Assertion failed. Expected no thrown exception, But was: %s', get_class($e)));
+		}
 	}
 }
 ?>
