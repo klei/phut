@@ -13,4 +13,4 @@ before_script:
   - curl http://getcomposer.org/installer | php
   - php composer.phar install --dev
 
-script: bin/phut
+script: ./bin/phut
