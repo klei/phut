@@ -22,4 +22,12 @@ class TheFirstTest {
         // Then
         Assert::areIdentical($result, 8);
     }
+
+    /**
+     * @Test
+     */
+    public function TravisBuild_ThisFailingTest_TheBuildShouldFail()
+    {
+        Assert::isTrue(false);
+    }
 }
