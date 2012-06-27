@@ -762,4 +762,59 @@ class AssertTests {
 			throw $e;
 		}
 	}
+
+	/**
+	 * @Test
+	 */
+	public function doesNotThrow_CallableNotThrowingException_ShouldNotThrowAssertionException() {
+		// Given
+		$actual = function() {
+			// Does not throw anything
+			return;
+		};
+
+		// When
+		$toTest = function() use($actual) {
+			Assert::doesNotThrow($actual);
+		};
+
+		// Then
+		try {
+			$toTest();
+		} catch (AssertionException $ae) {
+			// Not ok
+			throw $ae;
+		} catch (\Exception $e) {
+			throw $e;
+		}
+	}
+
+	/**
+	 * @Test
+	 */
+	public function doesNotThrow_CallableThrowingException_ShouldThrowAssertionException() {
+		// Given
+		$actual = function() {
+			throw new \Exception("An exception");
+			return;
+		};
+
+		// When
+		$toTest = function() use($actual) {
+			Assert::doesNotThrow($actual);
+		};
+
+		// Then
+		$ok = false;
+		try {
+			$toTest();
+		} catch (AssertionException $ae) {
+			$ok = true;
+		} catch (\Exception $e) {
+			throw $e;
+		}
+		if (!$ok) {
+			throw new AssertionException(self::EXPECTED_EXCEPTION_MESSAGE);
+		}
+	}
 }
