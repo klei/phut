@@ -254,7 +254,7 @@ class Runner {
 						$failMessage = $ae->getMessage();
 					} catch (\Exception $e) {
 						$failed = true;
-						$failMessage = sprintf('Error, Test failed with: %s', $e->getMessage());
+						$failMessage = sprintf('Error, Test failed with: %s (Line: %d, File: %s)', $e->getMessage(), $e->getLine(), $e->getFile());
 					}
 
 					echo sprintf(' %s %s', $this->getElapsedTimeString($testTimer), $this->getSuccessLabel($failed)) . PHP_EOL;
