@@ -337,9 +337,58 @@ class AssertTests {
 	/**
 	 * @Test
 	 */
+	public function isEmpty_ObjectToStringReturnsNonEmptyString_ShouldThrowAssertionException() {
+		// Given
+		$actual = new TestObjectNonEmptyToString();
+
+		// When
+		$toTest = function() use($actual) {
+			Assert::isEmpty($actual);
+		};
+
+		// Then
+		$ok = false;
+		try {
+			$toTest();
+		} catch (AssertionException $ae) {
+			$ok = true;
+		} catch (\Exception $e) {
+			throw $e;
+		}
+		if (!$ok) {
+			throw new AssertionException(self::EXPECTED_EXCEPTION_MESSAGE);
+		}
+	}
+
+	/**
+	 * @Test
+	 */
 	public function isEmpty_EmptyString_ShouldNotThrowAssertionException() {
 		// Given
 		$actual = "";
+
+		// When
+		$toTest = function() use($actual) {
+			Assert::isEmpty($actual);
+		};
+
+		// Then
+		try {
+			$toTest();
+		} catch (AssertionException $ae) {
+			// Not ok
+			throw $ae;
+		} catch (\Exception $e) {
+			throw $e;
+		}
+	}
+
+	/**
+	 * @Test
+	 */
+	public function isEmpty_ObjectToStringReturnsEmptyString_ShouldNotThrowAssertionException() {
+		// Given
+		$actual = new TestObjectEmptyToString();
 
 		// When
 		$toTest = function() use($actual) {
@@ -510,9 +559,58 @@ class AssertTests {
 	/**
 	 * @Test
 	 */
+	public function isNotEmpty_ObjectToStringReturnsEmptyString_ShouldThrowAssertionException() {
+		// Given
+		$actual = new TestObjectEmptyToString();
+
+		// When
+		$toTest = function() use($actual) {
+			Assert::isNotEmpty($actual);
+		};
+
+		// Then
+		$ok = false;
+		try {
+			$toTest();
+		} catch (AssertionException $ae) {
+			$ok = true;
+		} catch (\Exception $e) {
+			throw $e;
+		}
+		if (!$ok) {
+			throw new AssertionException(self::EXPECTED_EXCEPTION_MESSAGE);
+		}
+	}
+
+	/**
+	 * @Test
+	 */
 	public function isNotEmpty_NonEmptyString_ShouldNotThrowAssertionException() {
 		// Given
 		$actual = "NON EMPTY STRING";
+
+		// When
+		$toTest = function() use($actual) {
+			Assert::isNotEmpty($actual);
+		};
+
+		// Then
+		try {
+			$toTest();
+		} catch (AssertionException $ae) {
+			// Not ok
+			throw $ae;
+		} catch (\Exception $e) {
+			throw $e;
+		}
+	}
+
+	/**
+	 * @Test
+	 */
+	public function isNotEmpty_ObjectToStringReturnsNonEmptyString_ShouldNotThrowAssertionException() {
+		// Given
+		$actual = new TestObjectNonEmptyToString();
 
 		// When
 		$toTest = function() use($actual) {
@@ -816,5 +914,17 @@ class AssertTests {
 		if (!$ok) {
 			throw new AssertionException(self::EXPECTED_EXCEPTION_MESSAGE);
 		}
+	}
+}
+
+class TestObjectNonEmptyToString {
+	public function __toString() {
+		return "NON EMPTY";
+	}
+}
+
+class TestObjectEmptyToString {
+	public function __toString() {
+		return "";
 	}
 }
