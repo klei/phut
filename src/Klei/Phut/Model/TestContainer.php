@@ -1,7 +1,16 @@
 <?php
 namespace Klei\Phut\Model;
 
+use Klei\Phut\MethodHandler;
+
 class TestContainer {
+	/**
+	 * @var MethodHandler
+	 */
+	protected $methodHandler;
+
+	protected $methods;
+
 	/**
 	 * @var SetupMethod
 	 */
@@ -40,11 +49,31 @@ class TestContainer {
 
 	public function init() {
 		$this->instantiateTarget();
+		$this->extractRelevantMethodsFromTarget();
 	}
 
-	public function instantiateTarget() {
+	public function setMethodHandler(MethodHandler $methodHandler) {
+        $this->methodHandler = $methodHandler;
+    }
+
+    public function getMethodHandler() {
+        if ($this->methodHandler == null) {
+            $this->methodHandler = new MethodHandler();
+        }
+        return $this->methodHandler;
+    }
+
+	protected function instantiateTarget() {
 		$class = $this->targetClassName;
 		$this->target = new $class;
+	}
+
+	protected function extractRelevantMethodsFromTarget() {
+		$handler = $this->getMethodHandler();
+		$methods = $handler->getMethods($this->target);
+		$this->setup = $handler->extractSetupMethod($methods);
+		$this->tests = $handler->extractTestMethods($methods);
+		$this->teardown = $handler->extractTeardownMethod($methods);
 	}
 
 	/**
