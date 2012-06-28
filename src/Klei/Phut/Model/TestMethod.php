@@ -4,7 +4,6 @@ namespace Klei\Phut\Model;
 use Klei\Phut\AssertionException;
 use Klei\Phut\TestCase;
 use Klei\Phut\Timer;
-use Klei\Phut\Model\MethodResult;
 
 class TestMethod implements IRunnable {
 	/**

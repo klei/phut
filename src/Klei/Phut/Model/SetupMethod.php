@@ -19,6 +19,9 @@ class SetupMethod implements IRunnable {
 	 * @param \ReflectionMethod $method
 	 */
 	public function __construct($targetClass, \ReflectionMethod $method) {
+		if (!is_object($targetClass)) {
+			throw new \InvalidArgumentException(sprintf('Expected parameter $targetClass to be of type object, but was: %s', gettype($targetClass)));
+		}
 		if (!method_exists($targetClass, $method->getName())) {
 			throw new \InvalidArgumentException(sprintf('Expected parameter $targetClass to have the method "%s", but it was not found on object of type: %s', $method->getName(), gettype($targetClass)));
 		}
@@ -32,16 +35,21 @@ class SetupMethod implements IRunnable {
 	/**
 	 * Runs the current setup method
 	 *
-	 * @return null|string Returns null on success or errormessage on failure
+	 * @return MethodResult
 	 */
 	public function run() {
+		$timer = new Timer();
+		$timer->start();
+		$exception = null;
 		try {
 			$this->method->invoke($this->target);
-		} catch (AssertionException $ae) {
-			return $ae->getMessage();
 		} catch (\Exception $e) {
-			return 'Error, TestFixture Setup failed with: ' . $e->getMessage();
+			$exception = $e;
 		}
-		return null;
+		$timer->stop();
+		if ($exception !== null) {
+			return new MethodResult($timer, $exception);
+		}
+		return new MethodResult($timer);
 	}
 }
