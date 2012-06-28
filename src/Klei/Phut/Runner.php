@@ -16,6 +16,7 @@ class Runner {
     protected $version;
     protected $annotationsNamespace = __NAMESPACE__;
     protected $totalTimer;
+    protected $errorHandler;
 
 	public function __construct($arguments) {
 		$this->checkBinPathConstant();
@@ -28,6 +29,8 @@ class Runner {
 		$this->version = PHUT_VERSION;
 		$this->arguments = $arguments;
 		$this->totalTimer = new Timer();
+		$this->errorHandler = new ErrorHandler();
+		$this->errorHandler->register();
 	}
 
 	public function checkBinPathConstant() {
@@ -194,6 +197,7 @@ class Runner {
 	 */
 	protected function runAllTests($testClasses, $testMethods) {
 		$totalFailedTests = 0;
+		$totalNumberOfTests = 0;
 		// For each TestFixture
 		foreach ($testClasses as $class) {
 			if (!isset($testMethods[$class]))
@@ -202,6 +206,7 @@ class Runner {
 			echo PHP_EOL;
 
 			$numberOfTests = count($testMethods[$class]);
+			$totalNumberOfTests += $numberOfTests;
 			$fixtureTimer = new Timer();
 
 			echo $this->cli->string(sprintf(' %s (%d tests)', $class, $numberOfTests), 'white') . PHP_EOL;
@@ -280,6 +285,23 @@ class Runner {
 
 			$totalFailedTests += $numberOfFailed;
 		}
+
+		echo PHP_EOL;
+		if ($totalFailedTests > 0) {
+			$resultString = 'FAILED! ' . $totalFailedTests . ' of ' . $totalNumberOfTests . ' tests failed.';
+			$backgroundColor = 'red';
+		} else {
+			$resultString = 'SUCCESS! ' . $totalFailedTests . ' of ' . $totalNumberOfTests . ' tests failed.';
+			$backgroundColor = 'green';
+		}
+		if ($this->cli->isEnabled()) {
+			echo ' ' . $this->cli->string(str_repeat(' ', strlen($resultString) + 4), 'black', $backgroundColor) . PHP_EOL;
+			echo ' ' . $this->cli->string('  ' . $resultString . '  ', 'black', $backgroundColor) . PHP_EOL;
+			echo ' ' . $this->cli->string(str_repeat(' ', strlen($resultString) + 4), 'black', $backgroundColor) . PHP_EOL;
+		} else {
+			echo ' ' . $resultString . PHP_EOL;
+		}
+
 		return !($totalFailedTests > 0);
 	}
 
@@ -296,7 +318,8 @@ class Runner {
 	}
 
 	protected function getElapsedTimeString(Timer $timer, $trim = false) {
-		$elapsedTimeString = sprintf(self::ELAPSED_TIME_FORMAT . ' s', $timer->stop(3));
+		$timer->stop();
+		$elapsedTimeString = sprintf(self::ELAPSED_TIME_FORMAT . ' s', $timer->getElapsedTime(3));
 		if ($trim) {
 			$elapsedTimeString = trim($elapsedTimeString);
 		}

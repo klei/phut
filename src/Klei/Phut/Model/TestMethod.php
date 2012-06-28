@@ -3,6 +3,8 @@ namespace Klei\Phut\Model;
 
 use Klei\Phut\AssertionException;
 use Klei\Phut\TestCase;
+use Klei\Phut\Timer;
+use Klei\Phut\Model\MethodResult;
 
 class TestMethod implements IRunnable {
 	/**
@@ -64,20 +66,25 @@ class TestMethod implements IRunnable {
 	/**
 	 * Runs current test
 	 *
-	 * @return null|string Returns null on success or errormessage on failure
+	 * @return MethodResult
 	 */
 	public function run() {
+		$timer = new Timer();
+		$timer->start();
+		$exception = null;
 		try {
 			if ($this->isParameterizedTest()) {
 				$this->method->invokeArgs($this->target, $this->testCase->getParams());
 			} else {
 				$this->method->invoke($this->target);
 			}
-		} catch (AssertionException $ae) {
-			return $ae->getMessage();
 		} catch (\Exception $e) {
-			return 'Error, test failed with: ' . $e->getMessage();
+			$exception = $e;
 		}
-		return null;
+		$timer->stop();
+		if ($exception !== null) {
+			return new MethodResult($timer, $exception);
+		}
+		return new MethodResult($timer);
 	}
 }

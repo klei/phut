@@ -50,7 +50,7 @@ class TestMethodTests {
 	public function NewTestMethod_TargetMethodHasRequiredParamsNoTestCaseGiven_ThrowInvalidArgumentException() {
 		// Given
 		$targetClass = new TestTargetClass();
-		$method = new \ReflectionMethod($targetClass, 'testMethod');
+		$method = new \ReflectionMethod($targetClass, 'testMethodWithParameter');
 
 		// When
 		$toTest = function() use($targetClass, $method) {
@@ -67,7 +67,7 @@ class TestMethodTests {
 	public function NewTestMethod_TestCaseWithTooFewParamsGiven_ThrowInvalidArgumentException() {
 		// Given
 		$targetClass = new TestTargetClass();
-		$method = new \ReflectionMethod($targetClass, 'testMethod');
+		$method = new \ReflectionMethod($targetClass, 'testMethodWithParameter');
 		$testCaseParameters = array();
 		$testCase = new TestCase($testCaseParameters);
 
@@ -86,7 +86,7 @@ class TestMethodTests {
 	public function NewTestMethod_TestCaseWithCorrectNumberOfParamsGiven_ShouldNotThrowException() {
 		// Given
 		$targetClass = new TestTargetClass();
-		$method = new \ReflectionMethod($targetClass, 'testMethod');
+		$method = new \ReflectionMethod($targetClass, 'testMethodWithParameter');
 		$testCaseParameters = array("One param");
 		$testCase = new TestCase($testCaseParameters);
 
@@ -105,7 +105,7 @@ class TestMethodTests {
 	public function isParameterizedTest_TestCaseWithParams_EqualsTrue() {
 		// Given
 		$targetClass = new TestTargetClass();
-		$method = new \ReflectionMethod($targetClass, 'testMethod');
+		$method = new \ReflectionMethod($targetClass, 'testMethodWithParameter');
 		$testCaseParameters = array("One param");
 		$testCase = new TestCase($testCaseParameters);
 		$testMethod = new TestMethod($targetClass, $method, $testCase);
@@ -120,7 +120,7 @@ class TestMethodTests {
 	public function isParameterizedTest_NoTestCase_EqualsFalse() {
 		// Given
 		$targetClass = new TestTargetClass();
-		$method = new \ReflectionMethod($targetClass, 'testMethod2');
+		$method = new \ReflectionMethod($targetClass, 'testMethod');
 		$testMethod = new TestMethod($targetClass, $method);
 
 		// Then
@@ -130,10 +130,10 @@ class TestMethodTests {
 	/**
 	 * @Test
 	 */
-	public function run_ParameterizedTestWithoutError_MethodShouldBeInvokedAndResultNull() {
+	public function run_ParameterizedTestWithoutError_MethodShouldBeInvokedAndResultSuccessful() {
 		// Given
 		$targetClass = new TestTargetClass();
-		$method = new \ReflectionMethod($targetClass, 'testMethod');
+		$method = new \ReflectionMethod($targetClass, 'testMethodWithParameter');
 		$testCaseParameters = array("One param");
 		$testCase = new TestCase($testCaseParameters);
 		$testMethod = new TestMethod($targetClass, $method, $testCase);
@@ -143,16 +143,16 @@ class TestMethodTests {
 
 		// Then
 		Assert::isTrue($targetClass->testMethodHasBeenRun);
-		Assert::isNull($result);
+		Assert::isTrue($result->isSuccessful());
 	}
 
 	/**
 	 * @Test
 	 */
-	public function run_OrdinaryTestWithoutError_MethodShouldBeInvokedAndResultNull() {
+	public function run_OrdinaryTestWithoutError_MethodShouldBeInvokedAndResultSuccessful() {
 		// Given
 		$targetClass = new TestTargetClass();
-		$method = new \ReflectionMethod($targetClass, 'testMethod2');
+		$method = new \ReflectionMethod($targetClass, 'testMethod');
 		$testMethod = new TestMethod($targetClass, $method);
 
 		// When
@@ -160,17 +160,17 @@ class TestMethodTests {
 
 		// Then
 		Assert::isTrue($targetClass->testMethod2HasBeenRun);
-		Assert::isNull($result);
+		Assert::isTrue($result->isSuccessful());
 	}
 
 
 	/**
 	 * @Test
 	 */
-	public function run_ParameterizedTestThrowsAssertionException_ResultShouldEqualExceptionMessage() {
+	public function run_ParameterizedTestThrowsAssertionException_ResultShouldNotBeSuccessful() {
 		// Given
 		$targetClass = new TestTargetClass();
-		$method = new \ReflectionMethod($targetClass, 'testMethodWithException');
+		$method = new \ReflectionMethod($targetClass, 'testMethodWithParameterAndException');
 		$testCaseParameters = array("One param");
 		$testCase = new TestCase($testCaseParameters);
 		$testMethod = new TestMethod($targetClass, $method, $testCase);
@@ -179,23 +179,23 @@ class TestMethodTests {
 		$result = $testMethod->run();
 
 		// Then
-		Assert::areIdentical($result, $targetClass::EXCEPTION_MESSAGE);
+		Assert::isFalse($result->isSuccessful());
 	}
 
 	/**
 	 * @Test
 	 */
-	public function run_OrdinaryTestThrowsAssertionException_ResultShouldEqualExceptionMessage() {
+	public function run_OrdinaryTestThrowsAssertionException_ResultShouldNotBeSuccessful() {
 		// Given
 		$targetClass = new TestTargetClass();
-		$method = new \ReflectionMethod($targetClass, 'testMethod2WithException');
+		$method = new \ReflectionMethod($targetClass, 'testMethodWithException');
 		$testMethod = new TestMethod($targetClass, $method);
 
 		// When
 		$result = $testMethod->run();
 
 		// Then
-		Assert::areIdentical($result, $targetClass::EXCEPTION_MESSAGE);
+		Assert::isFalse($result->isSuccessful());
 	}
 }
 
@@ -204,22 +204,22 @@ class TestTargetClass {
 	public $testMethodHasBeenRun = false;
 	public $testMethod2HasBeenRun = false;
 
-	public function testMethod($param1) {
+	public function testMethodWithParameter($param1) {
 		$this->testMethodHasBeenRun = true;
 		return;
 	}
 
-	public function testMethodWithException($param1) {
+	public function testMethodWithParameterAndException($param1) {
 		throw new AssertionException(self::EXCEPTION_MESSAGE);
 		return;
 	}
 
-	public function testMethod2() {
+	public function testMethod() {
 		$this->testMethod2HasBeenRun = true;
 		return;
 	}
 
-	public function testMethod2WithException() {
+	public function testMethodWithException() {
 		throw new AssertionException(self::EXCEPTION_MESSAGE);
 		return;
 	}
