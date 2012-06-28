@@ -44,7 +44,7 @@ class Assert {
 	 */
 	public static function areEqual($actual, $expected) {
 		if ($actual != $expected) {
-			throw new AssertionException(sprintf('Assertion failed. Expected: %s, But was: %s', $expected, $actual));
+			throw new AssertionException(sprintf('Assertion failed. Expected: %s, But was: %s', self::toString($expected), self::toString($actual)));
 		}
 	}
 
@@ -54,7 +54,7 @@ class Assert {
 	 */
 	public static function areNotEqual($actual, $expected) {
 		if ($actual == $expected) {
-			throw new AssertionException(sprintf('Assertion failed. Expected not to be equal to: %s, But it was.', $expected));
+			throw new AssertionException(sprintf('Assertion failed. Expected not to be equal to: %s, But it was.', self::toString($expected)));
 		}
 	}
 
@@ -64,7 +64,7 @@ class Assert {
 	 */
 	public static function areIdentical($actual, $expected) {
 		if ($actual !== $expected) {
-			throw new AssertionException(sprintf('Assertion failed. Expected: %s, But was: %s', $expected, $actual));
+			throw new AssertionException(sprintf('Assertion failed. Expected: %s, But was: %s', self::toString($expected), self::toString($actual)));
 		}
 	}
 
@@ -74,7 +74,7 @@ class Assert {
 	 */
 	public static function areNotIdentical($actual, $expected) {
 		if ($actual === $expected) {
-			throw new AssertionException(sprintf('Assertion failed. Expected not to be identical to: %s, But it was.', $expected));
+			throw new AssertionException(sprintf('Assertion failed. Expected not to be identical to: %s, But it was.', self::toString($expected)));
 		}
 	}
 
@@ -86,13 +86,13 @@ class Assert {
 			throw new AssertionException(sprintf('Assertion failed. Expected an empty string, But was: %s', (string)$value));
 		}
 		if (is_array($value) && !empty($value)) {
-			throw new AssertionException(sprintf('Assertion failed. Expected an empty array, But was: array(%d)', count($value)));
+			throw new AssertionException(sprintf('Assertion failed. Expected an empty array, But was: %s', self::toString($value)));
 		}
 		if ($value instanceof \Traversable) {
 			$value->rewind();
 			$count = iterator_count($value);
 			if ($count !== 0) {
-				throw new AssertionException(sprintf('Assertion failed. Expeced an empty iterator, But was: %s(%d)', gettype($value), $count));
+				throw new AssertionException(sprintf('Assertion failed. Expeced an empty iterator, But was: %s of size %d', gettype($value), $count));
 			}
 		}
 		self::failIfNeitherStringNorArrayNorIterator($value);
@@ -264,6 +264,13 @@ class Assert {
 			return true;
 		}
 		return false;
+	}
+
+	protected static function toString($value) {
+		if (!is_array($value)) {
+			return (string)$value;
+		}
+		return 'array(' . implode(', ', $value) . ')';
 	}
 }
 ?>
