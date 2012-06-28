@@ -44,6 +44,10 @@ class Cli {
 		$this->doColorize = true;
 	}
 
+	public function isEnabled() {
+		return $this->doColorize;
+	}
+
 	public function string($string, $foregroundColor = null, $backgroundColor = null) {
 		if (!$this->doColorize) {
 			return $string;
