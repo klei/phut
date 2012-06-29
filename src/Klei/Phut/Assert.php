@@ -133,7 +133,16 @@ class Assert {
 		} catch (\Exception $e) {
 			$actualException = get_class($e);
 			if ($expectedException !== $actualException) {
-				throw new AssertionException(sprintf('Assertion failed. Expected exception: %s, But was: %s', $expectedException, $actualException));
+				throw new AssertionException(
+					sprintf(
+						'Assertion failed. Expected exception: %s, But was: %s ("%s", Line: %d, File: %s)',
+						$expectedException,
+						$actualException,
+						$e->getMessage(),
+						$e->getLine(),
+						$e->getFile()
+					)
+				); // @TODO: Add InnerException parameter to AssertionException, so the message could be formatted later
 			} else {
 				return $e;
 			}
@@ -153,7 +162,15 @@ class Assert {
 		try {
 			$callable();
 		} catch (\Exception $e) {
-			throw new AssertionException(sprintf('Assertion failed. Expected no thrown exception, But was: %s', get_class($e)));
+			throw new AssertionException(
+				sprintf(
+					'Assertion failed. Expected no thrown exception, But was: %s  ("%s", Line: %d, File: %s)',
+					get_class($e),
+					$e->getMessage(),
+					$e->getLine(),
+					$e->getFile()
+				)
+			);  // @TODO: Add InnerException parameter to AssertionException, so the message could be formatted later
 		}
 	}
 
