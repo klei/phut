@@ -9,6 +9,9 @@ class TestContainer {
 	 */
 	protected $methodHandler;
 
+	/**
+	 * @var array<\ReflectionMethod>
+	 */
 	protected $methods;
 
 	/**
@@ -86,10 +89,10 @@ class TestContainer {
 	}
 
 	/**
-	 * @return void
+	 * @return MethodResult
 	 */
 	public function runSetup() {
-		$this->setup->run();
+		return $this->setup->run();
 	}
 
 	/**
@@ -102,9 +105,44 @@ class TestContainer {
 	}
 
 	/**
-	 * @return void
+	 * @return MethodResult
 	 */
 	public function runTeardown() {
-		$this->teardown->run();
+		return $this->teardown->run();
+	}
+
+	/**
+	 * @return array<MethodResult>
+	 */
+	public function runTests() {
+		$results = array();
+		foreach ($this->tests as $test) {
+			$results[] = $test->run();
+		}
+		return $results;
+	}
+
+	/**
+	 * @return array<MethodResult>
+	 */
+	public function run() {
+		$results = array();
+		$runTests = true;
+
+		if ($this->hasSetup()) {
+			$setupResult = $this->runSetup();
+			$runTests = $setupResult->isSuccessful();
+			$results[] = $setupResult;
+		}
+
+		if ($runTests) {
+			$results = array_merge($results, $this->runTests());
+		}
+
+		if ($this->hasTeardown()) {
+			$results[] = $this->runTeardown();
+		}
+
+		return $results;
 	}
 }
