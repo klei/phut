@@ -116,6 +116,24 @@ class TimerTests {
 	/**
 	 * @Test
 	 */
+	public function stop_SubsequentCalls_ThrowException() {
+		// Given
+		$timer = new Timer();
+		$timer->start();
+		$timer->stop();
+
+		// When
+		$toTest = function() use($timer) {
+			$timer->stop();
+		};
+
+		// Then
+		Assert::throws('Exception', $toTest);
+	}
+
+	/**
+	 * @Test
+	 */
 	public function getElapsedTime_NotStarted_ThrowException() {
 		// Given
 		$timer = new Timer();
@@ -180,23 +198,5 @@ class TimerTests {
 		// Then
 		Assert::areNotIdentical($newElapsedTime, $elapsedTime);
 		Assert::greater($newElapsedTime, $elapsedTime);
-	}
-
-	/**
-	 * @Test
-	 */
-	public function stop_SubsequentCalls_ThrowException() {
-		// Given
-		$timer = new Timer();
-		$timer->start();
-		$timer->stop();
-
-		// When
-		$toTest = function() use($timer) {
-			$timer->stop();
-		};
-
-		// Then
-		Assert::throws('Exception', $toTest);
 	}
 }
