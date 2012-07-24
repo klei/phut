@@ -36,7 +36,7 @@ One simple way to install Phut is to use [Composer](http://getcomposer.org/). Fi
 ```json
 {
     "require": {
-        "klei\phut": "*"
+        "klei/phut": "*"
     },
     "config": {
         "bin-dir": "bin/"
