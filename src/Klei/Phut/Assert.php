@@ -92,7 +92,7 @@ class Assert {
 			$value->rewind();
 			$count = iterator_count($value);
 			if ($count !== 0) {
-				throw new AssertionException(sprintf('Assertion failed. Expeced an empty iterator, But was: %s of size %d', gettype($value), $count));
+				throw new AssertionException(sprintf('Assertion failed. Expected an empty iterator, But was: %s of size %d', gettype($value), $count));
 			}
 		}
 		self::failIfNeitherStringNorArrayNorIterator($value);
@@ -112,7 +112,7 @@ class Assert {
 			$value->rewind();
 			$count = iterator_count($value);
 			if ($count === 0) {
-				throw new AssertionException(sprintf('Assertion failed. Expeced a non empty iterator, But was: empty %s', gettype($value)));
+				throw new AssertionException(sprintf('Assertion failed. Expected a non empty iterator, But was: empty %s', gettype($value)));
 			}
 		}
 		self::failIfNeitherStringNorArrayNorIterator($value);
