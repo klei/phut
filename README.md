@@ -76,31 +76,33 @@ use Klei\Phut\Assert;
  * @TestFixture
  */
 class MyFirstTests {
-	/**
-	 * @Test
-	 */
-	public function MultiplyOperator_Multiply2by4_ShouldGive8()
-	{
-		// Given
-		$number1 = 2;
-		$number2 = 4;
+    /**
+     * @Test
+     */
+    public function MultiplyOperator_Multiply2by4_ShouldGive8()
+    {
+        // Given
+        $number1 = 2;
+        $number2 = 4;
 
-		// When
-		$result = $number1 * $number2;
+        // When
+        $result = $number1 * $number2;
 
-		// Then
-		Assert::areIdentical($result, 8);
-	}
+        // Then
+        Assert::areIdentical($result, 8);
+    }
 }
 ```
 
 You can then run your test with the command:
 
-    bin/phut [<test-folder-name>|<test-file-name>]
+    bin/phut [<test-folder-name>]
 
-If no folder (```<test-folder-name>```) or file (```<test-file-name>```) is specified, the runner defaults to the folder ```tests/```.
+If no folder (```<test-folder-name>```) is specified, the runner defaults to the folder ```tests/``` (in the current working directory).
 
-_**N.B.** To get colorized output on windows see [Ansicon](https://github.com/adoxa/ansicon)._
+```<test-folder-name>``` can be either a relative folder, e.g. `../tests`, or an absolute path e.g. `/var/sites/app/tests`, or `c:\sites\app\tests`.
+
+_**N.B.** To get colorized output on Windows see [Ansicon](https://github.com/adoxa/ansicon)._
 
 The future for Phut
 -------------------
