@@ -4,7 +4,7 @@ namespace Klei\Phut;
 class Cli {
 	protected $doColorize = true;
 
-	protected $foreground = array(
+	protected static $foreground = array(
 		'black' => '0;30',
 		'dark-gray' => '1;30',
 		'red' => '0;31',
@@ -23,7 +23,7 @@ class Cli {
 		'white' => '1;37'
 	);
 
-	protected $background = array(
+	protected static $background = array(
 		'black' => '40',
 		'red' => '41',
 		'green' => '42',
@@ -48,28 +48,43 @@ class Cli {
 		return $this->doColorize;
 	}
 
-	public function string($string, $foregroundColor = null, $backgroundColor = null) {
-		if (!$this->doColorize) {
-			return $string;
-		}
+	public function string($message, $foregroundColor = null, $backgroundColor = null) {
+		$this->colorize($message, $foregroundColor, $backgroundColor);
 
-		$result = "";
+		return $message;
+	}
 
-		if ($foregroundColor !== null) {
-			$result .= $this->color($this->getForegroundColor($foregroundColor));
-		}
+	public function colorize(&$message, $foregroundColor = null, $backgroundColor = null)
+	{
+		if (!$this->doColorize)
+			return;
 
-		if ($backgroundColor !== null) {
-			$result .= $this->color($this->getBackgroundColor($backgroundColor));
-		}
+		$this->applyBackgroundColor($message, $backgroundColor);
 
-		$result .= $string;
+		$this->applyForegroundColor($message, $foregroundColor);
 
-		if ($foregroundColor !== null || $backgroundColor !== null) {
-			$result .= $this->color($this->reset);
-		}
+		$this->applyColorReset($message, $foregroundColor, $backgroundColor);
+	}
 
-		return $result;
+	public function applyForegroundColor(&$message, $foregroundColor = null)
+	{
+		if ($foregroundColor === null)
+			return;
+		$message = $this->color($this->getForegroundColor($foregroundColor)) . $message;
+	}
+
+	public function applyBackgroundColor(&$message, $backgroundColor = null)
+	{
+		if ($backgroundColor === null)
+			return;
+		$message = $this->color($this->getBackgroundColor($backgroundColor)) . $message;
+	}
+
+	public function applyColorReset(&$message, $foregroundColor = null, $backgroundColor = null)
+	{
+		if ($foregroundColor === null && $backgroundColor === null)
+			return;
+		$message .= $this->color($this->reset);
 	}
 
 	public function color($color) {
@@ -77,17 +92,17 @@ class Cli {
 	}
 
 	protected function getForegroundColor($foregroundColor) {
-		if (!isset($this->foreground[$foregroundColor])) {
+		if (!isset(self::$foreground[$foregroundColor])) {
 			throw new \InvalidArgumentException(sprintf('The specified foreground color \'%s\' does not exist', $foregroundColor));
 		}
-		return $this->foreground[$foregroundColor];
+		return self::$foreground[$foregroundColor];
 	}
 
 	protected function getBackgroundColor($backgroundColor) {
-		if (!isset($this->background[$backgroundColor])) {
+		if (!isset(self::$background[$backgroundColor])) {
 			throw new \InvalidArgumentException(sprintf('The specified background color \'%s\' does not exist', $backgroundColor));
 		}
-		return $this->background[$backgroundColor];
+		return self::$background[$backgroundColor];
 	}
 }
 ?>
