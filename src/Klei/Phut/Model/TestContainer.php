@@ -66,6 +66,11 @@ class TestContainer {
         return $this->methodHandler;
     }
 
+    public function getName()
+    {
+        return $this->targetClassName;
+    }
+
     protected function instantiateTarget() {
         $class = $this->targetClassName;
         $this->target = new $class;
@@ -125,8 +130,8 @@ class TestContainer {
 
     protected function gatherSetupResultOnSuccess(MethodResult $setupResult, array &$methodResults)
     {
-    	if ($setupResult->isSuccessful())
-    		$methodResults += $setupResult;
+        if ($setupResult->isSuccessful())
+            $methodResults += $setupResult;
     }
 
     /**
