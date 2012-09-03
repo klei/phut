@@ -82,8 +82,8 @@ class TestMethod implements IRunnable {
 		}
 		$timer->stop();
 		if ($exception !== null) {
-			return new MethodResult($timer, $exception);
+			return new MethodResult($this->method->getName(), $timer, $exception);
 		}
-		return new MethodResult($timer);
+		return new MethodResult($this->method->getName(), $timer);
 	}
 }

@@ -6,12 +6,24 @@ use Klei\Phut\Timer;
 use Klei\Phut\AssertionException;
 
 class MethodResult {
+    protected $name;
     protected $timer;
     protected $exception;
 
-    public function __construct(Timer $timer, Exception $exception = null) {
+    public function __construct($methodName, Timer $timer, Exception $exception = null) {
+        $this->setName($methodName);
         $this->setTimer($timer);
         $this->setException($exception);
+    }
+
+    public function setName($name)
+    {
+        $this->name = $name;
+    }
+
+    public function getName()
+    {
+        return $this->name;
     }
 
     public function setTimer(Timer $timer) {
