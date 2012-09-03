@@ -46,10 +46,6 @@ class MethodResult {
     }
 
     public function isUnexpectedException() {
-        if ($this->exception instanceof AssertionException) {
-            return false;
-        } else {
-            return true;
-        }
+        return (bool)($this->exception instanceof AssertionException);
     }
 }
