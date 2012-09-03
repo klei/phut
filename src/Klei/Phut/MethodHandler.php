@@ -26,9 +26,7 @@ class MethodHandler {
     }
 
     public function extractSetupMethod(array $methods) {
-        $result = array_filter($methods, function ($method) {
-            return $this->isSetupMethod($method);
-        });
+        $result = array_filter($methods, array($this, 'isSetupMethod'));
         if (count($result) > 1) {
             throw new \Exception(sprintf('There can be only one Setup method per class, %d found', count($result))); // @TODO: Move check to caller
         }
@@ -39,9 +37,7 @@ class MethodHandler {
     }
 
     public function extractTestMethods(array $methods) {
-        $result = array_filter($methods, function ($method) {
-            return $this->isTestMethod($method);
-        });
+        $result = array_filter($methods, array($this, 'isTestMethod'));
         if (empty($result)) {
             throw new \Exception('A TestFixture must have at least one Test method'); // @TODO: Move check to caller
         }
@@ -49,9 +45,7 @@ class MethodHandler {
     }
 
     public function extractTeardownMethod(array $methods) {
-        $result = array_filter($methods, function ($method) {
-            return $this->isTeardownMethod($method);
-        });
+        $result = array_filter($methods, array($this, 'isTeardownMethod'));
         if (count($result) > 1) {
             throw new \Exception(sprintf('There can be only one Teardown method per class, %d found', count($result))); // @TODO: Move check to caller
         }
