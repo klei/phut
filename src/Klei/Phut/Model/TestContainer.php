@@ -1,6 +1,7 @@
 <?php
 namespace Klei\Phut\Model;
 
+use ReflectionMethod;
 use Klei\Phut\MethodHandler;
 
 class TestContainer {
@@ -10,9 +11,14 @@ class TestContainer {
     protected $methodHandler;
 
     /**
-     * @var array<\ReflectionMethod>
+     * @var array<ReflectionMethod>
      */
     protected $methods;
+
+    /**
+     * @var array<MethodResult>
+     */
+    protected $methodResults;
 
     /**
      * @var SetupMethod
@@ -44,10 +50,7 @@ class TestContainer {
      * @return void
      */
     public function __construct($testFixtureClassName) {
-        if (!class_exists($testFixtureClassName, false)) {
-            throw new \InvalidArgumentException(sprintf('The specified class does not exist: "%s". Could not create %s.', $testFixtureClassName, __CLASS__));
-        }
-        $this->targetClassName = $testFixtureClassName;
+        $this->setTargetClassName($testFixtureClassName);
     }
 
     public function init() {
@@ -66,9 +69,36 @@ class TestContainer {
         return $this->methodHandler;
     }
 
+    public function resetMethodResults()
+    {
+        $this->methodResults = array();
+    }
+
+    public function getMethodResults()
+    {
+        return $this->methodResults;
+    }
+
+    /**
+     * @param MethodResult $methodResult The MethodResult to add to the collection
+     * @return MethodResult The added MethodResult
+     */
+    public function appendMethodResult(MethodResult $methodResult)
+    {
+        $this->methodResults[] = $methodResult;
+        return $methodResult;
+    }
+
     public function getName()
     {
         return $this->targetClassName;
+    }
+
+    public function setTargetClassName($targetClassName)
+    {
+        if (!class_exists($targetClassName, false))
+            throw new \InvalidArgumentException(sprintf('The specified class does not exist: "%s". Could not create %s.', $targetClassName, __CLASS__));
+        $this->targetClassName = $targetClassName;
     }
 
     protected function instantiateTarget() {
@@ -114,27 +144,6 @@ class TestContainer {
     }
 
     /**
-     * @param array<MethodResult> $methodResults
-     * @return bool True if successful
-     */
-    public function runSetupAndGatherResult(array &$methodResults) {
-        if (!$this->hasSetup())
-            return true;
-
-        $setupResult = $this->setup->run();
-
-        $this->gatherSetupResultOnSuccess($setupResult, $methodResults);
-
-        return $setupResult->isSuccessful();
-    }
-
-    protected function gatherSetupResultOnSuccess(MethodResult $setupResult, array &$methodResults)
-    {
-        if ($setupResult->isSuccessful())
-            $methodResults += $setupResult;
-    }
-
-    /**
      * Checks if current TestContainer has a teardown method
      *
      * @return bool
@@ -144,37 +153,61 @@ class TestContainer {
     }
 
     /**
+     * @return bool True if successful
+     */
+    public function runSetup() {
+        if (!$this->hasSetup())
+            return true;
+
+        $setupResult = $this->appendMethodResult($this->setup->run());
+
+        return $setupResult->isSuccessful();
+    }
+
+    /**
      * @param array<MethodResult> $methodResults
      * @return void
      */
-    public function runTeardownAndGatherResult(array &$methodResults) {
+    public function runTeardown() {
         if (!$this->hasTeardown)
             return
-        $methodResults += $this->teardown->run();
+        $this->appendMethodResult($this->teardown->run());
     }
 
     /**
      * @return array<MethodResult>
      */
-    public function runTestsAndGatherResult(array &$methodResults) {
+    public function runTests() {
         foreach ($this->tests as $test) {
-            $methodResults += $test->run();
+            $this->appendMethodResult($test->run());
         }
     }
 
     /**
-     * @return array<MethodResult>
+     * @return bool True on success
      */
     public function run() {
-        $results = array();
+        $this->resetMethodResults();
 
-        $doRunTests = $this->runSetupAndGatherResult($results);
+        $doRunTests = $this->runSetup();
 
         if ($doRunTests)
-            $this->runTestsAndGatherResult($results);
+            $this->runTests();
 
-        $this->runTeardownAndGatherResult($results);
+        $this->runTeardown();
 
-        return $results;
+        return $this->isSuccessful();
+    }
+
+    public function getFailedMethodResults()
+    {
+        return array_filter($this->methodResults, function ($methodResult) {
+            return !$methodResult->isSuccessful();
+        });
+    }
+
+    public function isSuccessful()
+    {
+        return (bool)(count($this->getFailedMethodResults()) === 0);
     }
 }

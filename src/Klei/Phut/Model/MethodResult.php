@@ -2,6 +2,7 @@
 namespace Klei\Phut\Model;
 
 use Exception;
+use InvalidArgumentException;
 use Klei\Phut\Timer;
 use Klei\Phut\AssertionException;
 
@@ -28,12 +29,12 @@ class MethodResult {
 
     public function setTimer(Timer $timer) {
         if (!$timer->hasBeenRun()) {
-            throw new \InvalidArgumentException('A timer that has been run was expected. Could not set timer.');
+            throw new InvalidArgumentException('A timer that has been run was expected. Could not set timer.');
         }
         $this->timer = $timer;
     }
 
-    public function setException(\Exception $exception = null) {
+    public function setException(Exception $exception = null) {
         $this->exception = $exception;
     }
 
@@ -46,6 +47,6 @@ class MethodResult {
     }
 
     public function isUnexpectedException() {
-        return (bool)($this->exception instanceof AssertionException);
+        return (bool)!($this->exception instanceof AssertionException);
     }
 }
