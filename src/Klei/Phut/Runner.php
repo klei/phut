@@ -19,29 +19,58 @@ class Runner {
     protected $errorHandler;
 
     public function __construct($arguments) {
-        $this->checkBinPathConstant();
         $this->checkVersionConstant();
-        $this->cli = new Cli();
-        if (php_sapi_name() !== 'cli' || strtolower(substr(PHP_OS, 0, 3)) === 'win' && getenv('ANSICON') == null) {
-            $this->cli->disableColoring();
-        }
-        $this->workingDir = getcwd();
+        $this->setWorkingDirectory();
         $this->version = PHUT_VERSION;
-        $this->arguments = $arguments;
-        $this->totalTimer = new Timer();
-        $this->errorHandler = new ErrorHandler();
-        $this->errorHandler->register();
-    }
-
-    public function checkBinPathConstant() {
-        if (!defined('PHUT_BIN_PATH')) {
-            throw new \Exception('Constant PHUT_BIN_PATH is not defined!');
-        }
+        $this->setArguments($arguments);
+        $this->initializeTotalTimer();
+        $this->enableErrorHandler();
     }
 
     public function checkVersionConstant() {
         if (!defined('PHUT_VERSION')) {
             throw new \Exception('Constant PHUT_VERSION is not defined!');
+        }
+    }
+
+    public function setWorkingDirectory()
+    {
+        $this->workingDir = getcwd();
+    }
+
+    public function setArguments($arguments)
+    {
+        $this->arguments = $arguments;
+    }
+
+    public function initializeTotalTimer()
+    {
+        $this->totalTimer = new Timer();
+    }
+
+    public function enableErrorHandler()
+    {
+        $this->errorHandler = new ErrorHandler();
+        $this->errorHandler->register();
+    }
+
+    public function getCli()
+    {
+        if ($this->cli === null)
+            $this->setCli(new Cli());
+        return $this->cli;
+    }
+
+    public function setCli(Cli $cli)
+    {
+        $this->cli = $cli;
+        $this->disableColoringIfNotAvailable($this->cli);
+    }
+
+    protected function disableColoringIfNotAvailable(Cli $cli)
+    {
+        if (php_sapi_name() !== 'cli' || strtolower(substr(PHP_OS, 0, 3)) === 'win' && getenv('ANSICON') == null) {
+            $cli->disableColoring();
         }
     }
 
@@ -113,7 +142,7 @@ class Runner {
             // Print footer
             $this->printFooter();
         } catch (\Exception $e) {
-            echo ' ' . $this->cli->string(sprintf('Runner::run() failed with: %s', $e->getMessage()), 'black', 'red') . PHP_EOL;
+            echo ' ' . $this->getCli()->string(sprintf('Runner::run() failed with: %s', $e->getMessage()), 'black', 'red') . PHP_EOL;
             $result = false;
         }
 
@@ -233,7 +262,7 @@ class Runner {
             $totalNumberOfTests += $numberOfTests;
             $fixtureTimer = new Timer();
 
-            echo $this->cli->string(sprintf(' %s (%d tests)', $class, $numberOfTests), 'white') . PHP_EOL;
+            echo $this->getCli()->string(sprintf(' %s (%d tests)', $class, $numberOfTests), 'white') . PHP_EOL;
 
             $fixtureTimer->start();
 
@@ -285,7 +314,7 @@ class Runner {
 
                     if ($failed) {
                         $numberOfFailed++;
-                        echo sprintf('       %s', $this->cli->string($failMessage, 'purple')) . PHP_EOL;
+                        echo sprintf('       %s', $this->getCli()->string($failMessage, 'purple')) . PHP_EOL;
                     }
                 }
             } else {
@@ -303,7 +332,7 @@ class Runner {
 
             echo PHP_EOL;
 
-            $resultMessage = sprintf(' %s failed, %s successful tests', $this->cli->string($numberOfFailed, 'red'), $this->cli->string($numberOfTests - $numberOfFailed, 'green'));
+            $resultMessage = sprintf(' %s failed, %s successful tests', $this->getCli()->string($numberOfFailed, 'red'), $this->getCli()->string($numberOfTests - $numberOfFailed, 'green'));
             $padding = str_pad(' ', 125 - strlen($resultMessage));
             echo sprintf(' %s %s %s %s', $resultMessage, $padding, $this->getElapsedTimeString($fixtureTimer), $this->getSuccessLabel($numberOfFailed > 0)) . PHP_EOL;
 
@@ -318,10 +347,10 @@ class Runner {
             $resultString = 'SUCCESS! ' . $totalFailedTests . ' of ' . $totalNumberOfTests . ' tests failed.';
             $backgroundColor = 'green';
         }
-        if ($this->cli->isEnabled()) {
-            echo ' ' . $this->cli->string(str_repeat(' ', strlen($resultString) + 4), 'black', $backgroundColor) . PHP_EOL;
-            echo ' ' . $this->cli->string('  ' . $resultString . '  ', 'black', $backgroundColor) . PHP_EOL;
-            echo ' ' . $this->cli->string(str_repeat(' ', strlen($resultString) + 4), 'black', $backgroundColor) . PHP_EOL;
+        if ($this->getCli()->isEnabled()) {
+            echo ' ' . $this->getCli()->string(str_repeat(' ', strlen($resultString) + 4), 'black', $backgroundColor) . PHP_EOL;
+            echo ' ' . $this->getCli()->string('  ' . $resultString . '  ', 'black', $backgroundColor) . PHP_EOL;
+            echo ' ' . $this->getCli()->string(str_repeat(' ', strlen($resultString) + 4), 'black', $backgroundColor) . PHP_EOL;
         } else {
             echo ' ' . $resultString . PHP_EOL;
         }
@@ -347,14 +376,14 @@ class Runner {
         if ($trim) {
             $elapsedTimeString = trim($elapsedTimeString);
         }
-        return $this->cli->string($elapsedTimeString, 'dark-gray');
+        return $this->getCli()->string($elapsedTimeString, 'dark-gray');
     }
 
     protected function getSuccessLabel($failed) {
         $failed = (bool)$failed;
         $color = $failed ? 'red' : 'green';
         $message = $failed ? 'FAIL' : ' OK ';
-        return $this->cli->string('[' . $message . ']', $color);
+        return $this->getCli()->string('[' . $message . ']', $color);
     }
 
     protected function getNowFormatted() {
@@ -366,7 +395,7 @@ class Runner {
         $this->totalTimer->start();
 
         echo PHP_EOL;
-        echo $this->cli->string(' Phut, version: ' . $this->version, 'white') . PHP_EOL;
+        echo $this->getCli()->string(' Phut, version: ' . $this->version, 'white') . PHP_EOL;
         echo ' -------------------------------' . PHP_EOL;
         echo PHP_EOL;
         echo sprintf(' Runner started at: %s', $this->getNowFormatted()) . PHP_EOL;
