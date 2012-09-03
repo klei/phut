@@ -4,145 +4,172 @@ namespace Klei\Phut\Model;
 use Klei\Phut\MethodHandler;
 
 class TestContainer {
-	/**
-	 * @var MethodHandler
-	 */
-	protected $methodHandler;
+    /**
+     * @var MethodHandler
+     */
+    protected $methodHandler;
 
-	/**
-	 * @var array<\ReflectionMethod>
-	 */
-	protected $methods;
+    /**
+     * @var array<\ReflectionMethod>
+     */
+    protected $methods;
 
-	/**
-	 * @var SetupMethod
-	 */
-	protected $setup;
+    /**
+     * @var SetupMethod
+     */
+    protected $setup;
 
-	/**
-	 * @var TeardownMethod
-	 */
-	protected $teardown;
+    /**
+     * @var TeardownMethod
+     */
+    protected $teardown;
 
-	/**
-	 * @var array<TestMethod>
-	 */
-	protected $tests;
+    /**
+     * @var array<TestMethod>
+     */
+    protected $tests;
 
-	/**
-	 * @var object The current TestFixture class
-	 */
-	protected $target;
+    /**
+     * @var object The current TestFixture class
+     */
+    protected $target;
 
-	/**
-	 * @var string The fully qualified class name for the TestFixture class
-	 */
-	protected $targetClassName;
+    /**
+     * @var string The fully qualified class name for the TestFixture class
+     */
+    protected $targetClassName;
 
-	/**
-	 * @param string $testFixtureClassName The fully qualified class name for the TestFixture class
-	 * @return void
-	 */
-	public function __construct($testFixtureClassName) {
-		if (!class_exists($testFixtureClassName, false)) {
-			throw new \InvalidArgumentException(sprintf('The specified class does not exist: "%s". Could not create %s.', $testFixtureClassName, __CLASS__));
-		}
-		$this->targetClassName = $testFixtureClassName;
-	}
+    /**
+     * @param string $testFixtureClassName The fully qualified class name for the TestFixture class
+     * @return void
+     */
+    public function __construct($testFixtureClassName) {
+        if (!class_exists($testFixtureClassName, false)) {
+            throw new \InvalidArgumentException(sprintf('The specified class does not exist: "%s". Could not create %s.', $testFixtureClassName, __CLASS__));
+        }
+        $this->targetClassName = $testFixtureClassName;
+    }
 
-	public function init() {
-		$this->instantiateTarget();
-		$this->extractRelevantMethodsFromTarget();
-	}
+    public function init() {
+        $this->instantiateTarget();
+        $this->extractRelevantMethodsFromTarget();
+    }
 
-	public function setMethodHandler(MethodHandler $methodHandler) {
+    public function setMethodHandler(MethodHandler $methodHandler) {
         $this->methodHandler = $methodHandler;
     }
 
     public function getMethodHandler() {
         if ($this->methodHandler == null) {
-            $this->methodHandler = new MethodHandler();
+            $this->setMethodHandler(new MethodHandler());
         }
         return $this->methodHandler;
     }
 
-	protected function instantiateTarget() {
-		$class = $this->targetClassName;
-		$this->target = new $class;
-	}
+    protected function instantiateTarget() {
+        $class = $this->targetClassName;
+        $this->target = new $class;
+    }
 
-	protected function extractRelevantMethodsFromTarget() {
-		$handler = $this->getMethodHandler();
-		$methods = $handler->getMethods($this->target);
-		$this->setup = $handler->extractSetupMethod($methods);
-		$this->tests = $handler->extractTestMethods($methods);
-		$this->teardown = $handler->extractTeardownMethod($methods);
-	}
+    protected function extractRelevantMethodsFromTarget() {
+        $handler = $this->getMethodHandler();
+        $methods = $this->getMethodsFromTarget($handler);
+        $this->extractSetupMethod($handler, $methods);
+        $this->extractTestMethods($handler, $methods);
+        $this->extractTeardownMethod($handler, $methods);
+    }
 
-	/**
-	 * Checks if current TestContainer has a setup method
-	 *
-	 * @return bool
-	 */
-	public function hasSetup() {
-		return $this->setup !== null;
-	}
+    protected function getMethodsFromTarget(MethodHandler $handler)
+    {
+        return $handler->getMethods($this->target);
+    }
 
-	/**
-	 * @return MethodResult
-	 */
-	public function runSetup() {
-		return $this->setup->run();
-	}
+    protected function extractSetupMethod(MethodHandler $handler, array $methods)
+    {
+        $this->setup = $handler->extractSetupMethod($methods);
+    }
 
-	/**
-	 * Checks if current TestContainer has a teardown method
-	 *
-	 * @return bool
-	 */
-	public function hasTeardown() {
-		return $this->teardown !== null;
-	}
+    protected function extractTestMethods(MethodHandler $handler, array $methods)
+    {
+        $this->tests = $handler->extractTestMethods($methods);
+    }
 
-	/**
-	 * @return MethodResult
-	 */
-	public function runTeardown() {
-		return $this->teardown->run();
-	}
+    protected function extractTeardownMethod(MethodHandler $handler, array $methods)
+    {
+        $this->teardown = $handler->extractTeardownMethod($methods);
+    }
 
-	/**
-	 * @return array<MethodResult>
-	 */
-	public function runTests() {
-		$results = array();
-		foreach ($this->tests as $test) {
-			$results[] = $test->run();
-		}
-		return $results;
-	}
+    /**
+     * Checks if current TestContainer has a setup method
+     *
+     * @return bool
+     */
+    public function hasSetup() {
+        return $this->setup !== null;
+    }
 
-	/**
-	 * @return array<MethodResult>
-	 */
-	public function run() {
-		$results = array();
-		$runTests = true;
+    /**
+     * @param array<MethodResult> $methodResults
+     * @return bool True if successful
+     */
+    public function runSetupAndGatherResult(array &$methodResults) {
+        if (!$this->hasSetup())
+            return true;
 
-		if ($this->hasSetup()) {
-			$setupResult = $this->runSetup();
-			$runTests = $setupResult->isSuccessful();
-			$results[] = $setupResult;
-		}
+        $setupResult = $this->setup->run();
 
-		if ($runTests) {
-			$results = array_merge($results, $this->runTests());
-		}
+        $this->gatherSetupResultOnSuccess($setupResult, $methodResults);
 
-		if ($this->hasTeardown()) {
-			$results[] = $this->runTeardown();
-		}
+        return $setupResult->isSuccessful();
+    }
 
-		return $results;
-	}
+    protected function gatherSetupResultOnSuccess(MethodResult $setupResult, array &$methodResults)
+    {
+    	if ($setupResult->isSuccessful())
+    		$methodResults += $setupResult;
+    }
+
+    /**
+     * Checks if current TestContainer has a teardown method
+     *
+     * @return bool
+     */
+    public function hasTeardown() {
+        return $this->teardown !== null;
+    }
+
+    /**
+     * @param array<MethodResult> $methodResults
+     * @return void
+     */
+    public function runTeardownAndGatherResult(array &$methodResults) {
+        if (!$this->hasTeardown)
+            return
+        $methodResults += $this->teardown->run();
+    }
+
+    /**
+     * @return array<MethodResult>
+     */
+    public function runTestsAndGatherResult(array &$methodResults) {
+        foreach ($this->tests as $test) {
+            $methodResults += $test->run();
+        }
+    }
+
+    /**
+     * @return array<MethodResult>
+     */
+    public function run() {
+        $results = array();
+
+        $doRunTests = $this->runSetupAndGatherResult($results);
+
+        if ($doRunTests)
+            $this->runTestsAndGatherResult($results);
+
+        $this->runTeardownAndGatherResult($results);
+
+        return $results;
+    }
 }
