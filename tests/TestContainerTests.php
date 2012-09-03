@@ -10,54 +10,54 @@ use Klei\Phut\Model\TestContainer;
  * @TestFixture
  */
 class TestContainerTests {
-	/**
- 	 * @Test
- 	 */
-	public function hasSetup_TestFixtureWithSetupMethod_EqualsTrue() {
-		// Given
-		$testContainer = new TestContainer('TheTestClass');
-		$testContainer->init();
+    /**
+      * @Test
+      */
+    public function hasSetup_TestFixtureWithSetupMethod_EqualsTrue() {
+        // Given
+        $testContainer = new TestContainer('TheTestClass');
+        $testContainer->init();
 
-		// Then
-		Assert::isTrue($testContainer->hasSetup());
-	}
+        // Then
+        Assert::isTrue($testContainer->hasSetup());
+    }
 
-	/**
- 	 * @Test
- 	 */
-	public function hasTeardown_TestFixtureWithTeardownMethod_EqualsTrue() {
-		// Given
-		$testContainer = new TestContainer('TheTestClass');
-		$testContainer->init();
+    /**
+      * @Test
+      */
+    public function hasTeardown_TestFixtureWithTeardownMethod_EqualsTrue() {
+        // Given
+        $testContainer = new TestContainer('TheTestClass');
+        $testContainer->init();
 
-		// Then
-		Assert::isTrue($testContainer->hasTeardown());
-	}
+        // Then
+        Assert::isTrue($testContainer->hasTeardown());
+    }
 }
 
 class TheTestClass {
-	/**
-	 * @Setup
-	 */
-	public function Setup() {
-		
-	}
+    /**
+     * @Setup
+     */
+    public function Setup() {
+        
+    }
 
-	/**
-	 * @Test
-	 */
-	public function Test() {
-		
-	}
+    /**
+     * @Test
+     */
+    public function Test() {
+        
+    }
 
-	/**
-	 * @Teardown
-	 */
-	public function Teardown() {
-		
-	}
+    /**
+     * @Teardown
+     */
+    public function Teardown() {
+        
+    }
 
-	public function NoAnnotation() {
-		
-	}
+    public function NoAnnotation() {
+        
+    }
 }
